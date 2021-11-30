@@ -248,15 +248,15 @@ plot_all_cand= st.container()
 
 col1, col2 = plot_all_cand.columns([5, 5])
 
-col1.plotly_chart(party_dynamics(filtered_df, 'All Contesting Candidates'))
-col2.plotly_chart(party_dynamics(filtered_df.query('Position==1'),'All Winner'))
+col1.plotly_chart(party_dynamics(filtered_df, 'All Contesting Candidates'),use_container_width=False)
+col2.plotly_chart(party_dynamics(filtered_df.query('Position==1'),'All Winner'),use_container_width=False)
 
 
 plot_women_cand= st.container()
 col3, col4 = plot_women_cand.columns([5, 5])
 
-col3.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)']) ], 'All Women Ward Candidates'))
-col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)'])].query('Position==1'), 'Winners in the women wards' ))
+col3.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)']) ], 'All Women Ward Candidates'),use_container_width=False)
+col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)'])].query('Position==1'), 'Winners in the women wards' ),use_container_width=False)
 
 
 plot_turnout=st.container()
