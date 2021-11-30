@@ -261,7 +261,7 @@ col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isi
 
 plot_turnout=st.container()
 
-col5, col6 = plot_turnout.columns([1,1.5])
+col5, col6 = plot_turnout.columns([1,3])
 
 df_lb=voter_turnout(filtered_df.copy())
 
