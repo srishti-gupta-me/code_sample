@@ -20,7 +20,7 @@ st.header("Telangana Urban Local Body Election Data")
 st.sidebar.subheader('Select Values')
 
 
-read_and_cache_csv = st.cache(suppress_st_warning=true)(pd.read_csv)
+read_and_cache_csv = st.cache(suppress_st_warning=True)(pd.read_csv)
 #df = read_and_cache_csv('/home/srishti/code_sample/tl.csv', nrows=100000)
 df = read_and_cache_csv('./tl.csv', nrows=100000)
 
