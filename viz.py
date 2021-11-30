@@ -9,22 +9,24 @@ import plotly.express as px
 import math
 from PIL import Image
 
-
 import warnings
 warnings.filterwarnings("ignore")
 
+#Function to set page configuration
 st.set_page_config(page_title="Election Dashboard", page_icon="📚", layout="wide")
-#This streamlit library function sets the page title as evident on the tab where the application is running and the favicon
+
 
 st.header("Telangana Urban Local Body Election Data")
 st.sidebar.subheader('Select Values')
 
 
+#Reading data into a dataframe
 read_and_cache_csv = st.cache(suppress_st_warning=True)(pd.read_csv)
 #df = read_and_cache_csv('/home/srishti/code_sample/tl.csv', nrows=100000)
 df = read_and_cache_csv('./tl.csv', nrows=100000)
 
-
+#Function to develop Pie Chart on the filtered dataframe
+@st.cache
 def pie_chart(dp, labels, value, chart_title):
     fig = px.pie(
         dp, 
@@ -50,7 +52,8 @@ def pie_chart(dp, labels, value, chart_title):
         ),
     )
 
-
+#Function to develop Bar Chart on the filtered dataframe
+@st.cache
 def bar_chart(df,x_var,y_var, title="", x_axis_title="",y_axis_title=""):
     fig = px.bar(
         df,
@@ -89,6 +92,8 @@ def bar_chart(df,x_var,y_var, title="", x_axis_title="",y_axis_title=""):
 
 
 
+#Function to calculate the voter turnout in the selected Local Body, calling bar_chart()function on the manipulated dataframe
+@st.cache
 def voter_turnout(df): 
     df['key']=df['LB_Type'].astype(str)+'_'+df['LB_Code'].astype(str)
     df_lb=pd.DataFrame({'key':df.groupby(['key'],dropna=False)['key'].unique().index,'Total_Votes':df.groupby(['key'],dropna=False)['Total_Votes'].sum().values,'Total_Electors':df.groupby(['key'],dropna=False)['Total_Electors'].sum().values})
@@ -96,11 +101,12 @@ def voter_turnout(df):
     df_lb['Voter_Turnout_Percentage']=df_lb['Voter_Turnout_Percentage'].mask(df_lb['Total_Electors'].isna()==False,(df_lb['Total_Votes']*100/df_lb['Total_Electors']))
     df_lb=df_lb.merge(df[['LB_Name','key']], how='left', on='key').drop_duplicates()
     
-    return bar_chart(df_lb,df_lb.LB_Name,"Voter_Turnout_Percentage","Voter Turnout Percentage in the Selected Local Bodies","Local Bodies Name","Voter Turnout Percentage")
+    return df_lb
     
     
 
 
+@st.cache
 def party_dynamics(df, chart_title):
      
     dp=pd.DataFrame({'Party':df.groupby(['Party_Abbreviation'],dropna=False).count().index,'Total_Count':df.groupby(['Party_Abbreviation'],dropna=False)['Party_Abbreviation'].count().values})
@@ -219,32 +225,30 @@ try:
 except:
     st.write(dx.style.format(precision=0))
  
-
+filtered_df=df.query(st.session_state['Selected_Query'])
     
 plot_all_cand= st.container()
 
 col1, col2 = plot_all_cand.columns([5, 5])
-
-col1.plotly_chart(party_dynamics(df.query(st.session_state['Selected_Query']), 'All Contesting Candidates'))
-
-col2.plotly_chart(party_dynamics(df.query(st.session_state['Selected_Query']).query('Position==1'),'All Winner'))
+col1.plotly_chart(party_dynamics(filtered_df, 'All Contesting Candidates'))
+col2.plotly_chart(party_dynamics(filtered_df.query('Position==1'),'All Winner'))
 
 
 plot_women_cand= st.container()
 col3, col4 = plot_women_cand.columns([5, 5])
 
-filtered_df=df.query(st.session_state['Selected_Query'])
+
 
 col3.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)']) ], 'All Women Ward Candidates'))
-
-col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)']) ].query('Position==1'), 'Winners in the women wards' ))
-
-
+col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)'])].query('Position==1'), 'Winners in the women wards' ))
 
 
 plot_turnout=st.container()
 
 col5, col6 = plot_turnout.columns([4,1])
-col5.plotly_chart(voter_turnout(filtered_df.copy()))
+
+df_lb=voter_turnout(filtered_df.copy())
+
+col5.plotly_chart(bar_chart(df_lb,df_lb.LB_Name,"Voter_Turnout_Percentage","Voter Turnout Percentage in the Selected Local Bodies","Local Bodies Name","Voter Turnout Percentage"))
 
 
