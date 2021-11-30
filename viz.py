@@ -17,13 +17,16 @@ st.set_page_config(page_title="Election Dashboard", page_icon="📚", layout="wi
 
 
 st.header("Telangana Urban Local Body Election Data")
+
+st.markdown('Visualise Party share in the Urban Local Body Elections across the wards.')
 st.sidebar.subheader('Select Values')
 
 
 #Reading data into a dataframe
 read_and_cache_csv = st.cache(suppress_st_warning=True)(pd.read_csv)
 #df = read_and_cache_csv('/home/srishti/code_sample/tl.csv', nrows=100000)
-df = read_and_cache_csv('./tl.csv', nrows=100000)
+df = read_and_cache_csv('./telangana_primary.csv', nrows=100000)
+
 
 #Function to develop Pie Chart on the filtered dataframe
 @st.cache
@@ -51,6 +54,9 @@ def pie_chart(dp, labels, value, chart_title):
             color="white"
         ),
     )
+    
+    
+    
 
 #Function to develop Bar Chart on the filtered dataframe
 @st.cache
@@ -96,12 +102,18 @@ def bar_chart(df,x_var,y_var, title="", x_axis_title="",y_axis_title=""):
 @st.cache
 def voter_turnout(df): 
     df['key']=df['LB_Type'].astype(str)+'_'+df['LB_Code'].astype(str)
+    
     df_lb=pd.DataFrame({'key':df.groupby(['key'],dropna=False)['key'].unique().index,'Total_Votes':df.groupby(['key'],dropna=False)['Total_Votes'].sum().values,'Total_Electors':df.groupby(['key'],dropna=False)['Total_Electors'].sum().values})
+    
     df_lb['Voter_Turnout_Percentage']=np.nan
-    df_lb['Voter_Turnout_Percentage']=df_lb['Voter_Turnout_Percentage'].mask(df_lb['Total_Electors'].isna()==False,(df_lb['Total_Votes']*100/df_lb['Total_Electors']))
+    
+    df_lb['Voter_Turnout_Percentage']=df_lb['Voter_Turnout_Percentage'].mask(((df_lb['Total_Electors'].isna()==False) |(df['Total_Electors'].astype(float)==0.0)),(df_lb['Total_Votes'].astype(float)*100/df_lb['Total_Electors'].astype(float)))
+    
     df_lb=df_lb.merge(df[['LB_Name','key']], how='left', on='key').drop_duplicates()
+
     
     return df_lb
+    
     
     
     
@@ -109,7 +121,7 @@ def voter_turnout(df):
 @st.cache
 def party_dynamics(df, chart_title):
      
-    dp=pd.DataFrame({'Party':df.groupby(['Party_Abbreviation'],dropna=False).count().index,'Total_Count':df.groupby(['Party_Abbreviation'],dropna=False)['Party_Abbreviation'].count().values})
+    dp=pd.DataFrame({'Party':df.groupby(['Party'],dropna=False).count().index,'Total_Count':df.groupby(['Party'],dropna=False)['Party'].count().values})
 
     dp['Percentage']=(dp['Total_Count']*100/sum(dp['Total_Count'])).round(2)
      
@@ -238,30 +250,32 @@ try:
 except:
     st.write(dx.style.format(precision=0))
  
+st.markdown("""<hr/>""", unsafe_allow_html=True)
 
 #Filtered dataframe
 filtered_df=df.query(st.session_state['Selected_Query'])
     
     
-
+st.subheader('Party share across all the filtered wards and local bodies')
 plot_all_cand= st.container()
-
 col1, col2 = plot_all_cand.columns([5, 5])
-
 col1.plotly_chart(party_dynamics(filtered_df, 'All Contesting Candidates'),use_container_width=False)
 col2.plotly_chart(party_dynamics(filtered_df.query('Position==1'),'All Winner'),use_container_width=False)
 
+st.markdown("""<hr/>""", unsafe_allow_html=True)
 
+st.subheader('Party share across all the filtered wards and local bodies for wards reserved for women candidate')
 plot_women_cand= st.container()
 col3, col4 = plot_women_cand.columns([5, 5])
+col3.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['BC(W)','U(W)','SC(W)','ST(W)']) ], 'All Women Ward Candidates'),use_container_width=False)
+col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['BC(W)','U(W)','SC(W)','ST(W)'])].query('Position==1'), 'Winners in the women wards' ),use_container_width=False)
 
-col3.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)']) ], 'All Women Ward Candidates'),use_container_width=False)
-col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isin(['Backward Classes (Women)','Unreserved (Women)','Scheduled Caste (Women)','Scheduled Tribe (Women)'])].query('Position==1'), 'Winners in the women wards' ),use_container_width=False)
+st.markdown("""<hr/>""", unsafe_allow_html=True)
 
+st.subheader('Voter Turnout Percentage across all the filtered dataset')
 
 plot_turnout=st.container()
-
-
+col5,col6,col7 = plot_turnout.columns([1,8,1])
 df_lb=voter_turnout(filtered_df.copy())
-
-plot_turnout.plotly_chart(bar_chart(df_lb,df_lb.LB_Name,"Voter_Turnout_Percentage","Voter Turnout Percentage in the Selected Local Bodies","Local Bodies Name","Voter Turnout Percentage"), use_container_width=False)
+col6.plotly_chart(bar_chart(df_lb,df_lb.LB_Name,"Voter_Turnout_Percentage","Voter Turnout Percentage in the Selected Local Bodies",
+"Local Bodies Name","Voter Turnout Percentage"), use_container_width=True)
