@@ -261,8 +261,7 @@ col4.plotly_chart(party_dynamics(filtered_df[filtered_df['Ward_Reservation'].isi
 
 plot_turnout=st.container()
 
-col5, col6 = plot_turnout.columns([1,3])
 
 df_lb=voter_turnout(filtered_df.copy())
 
-col6.plotly_chart(bar_chart(df_lb,df_lb.LB_Name,"Voter_Turnout_Percentage","Voter Turnout Percentage in the Selected Local Bodies","Local Bodies Name","Voter Turnout Percentage"))
+plot_turnout.plotly_chart(bar_chart(df_lb,df_lb.LB_Name,"Voter_Turnout_Percentage","Voter Turnout Percentage in the Selected Local Bodies","Local Bodies Name","Voter Turnout Percentage"), use_container_width=False)
