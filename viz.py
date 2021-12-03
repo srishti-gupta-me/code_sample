@@ -7,25 +7,23 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 import math
-from PIL import Image
 
+import time 
 import warnings
 warnings.filterwarnings("ignore")
 
 #Function to set page configuration
 st.set_page_config(page_title="Election Dashboard", page_icon="📚", layout="wide")
 
-
 st.header("Telangana Urban Local Body Election Data")
 
 st.markdown('Visualise Party share in the Urban Local Body Elections across the wards.')
 st.sidebar.subheader('Select Values')
 
-
 #Reading data into a dataframe
 read_and_cache_csv = st.cache(suppress_st_warning=True)(pd.read_csv)
-#df = read_and_cache_csv('/home/srishti/code_sample/tl.csv', nrows=100000)
 df = read_and_cache_csv('./telangana_primary.csv', nrows=100000)
+
 
 
 #Function to develop Pie Chart on the filtered dataframe
@@ -54,8 +52,6 @@ def pie_chart(dp, labels, value, chart_title):
             color="white"
         ),
     )
-    
-    
     
 
 #Function to develop Bar Chart on the filtered dataframe
@@ -110,13 +106,9 @@ def voter_turnout(df):
     df_lb['Voter_Turnout_Percentage']=df_lb['Voter_Turnout_Percentage'].mask(((df_lb['Total_Electors'].isna()==False) |(df['Total_Electors'].astype(float)==0.0)),(df_lb['Total_Votes'].astype(float)*100/df_lb['Total_Electors'].astype(float)))
     
     df_lb=df_lb.merge(df[['LB_Name','key']], how='left', on='key').drop_duplicates()
-
-    
     return df_lb
     
-    
-    
-    
+
 #Function to calculate the Party occurance count in the filtered dataframe
 @st.cache
 def party_dynamics(df, chart_title):
@@ -145,23 +137,16 @@ def party_dynamics(df, chart_title):
 
 if 'Selected_Year' not in st.session_state:
     st.session_state['Selected_Year']=df['Year'].unique()
-    
 if 'Selected_Poll' not in st.session_state:
     st.session_state['Selected_Poll']=df['Poll'].unique()
-     
 if 'Selected_District' not in st.session_state:
     st.session_state['Selected_District']=df['District'].unique()
-    
-    
 if 'Selected_LB_Name' not in st.session_state:
     st.session_state['Selected_LB_Name']=df['LB_Name'].unique()
-    
 if 'Selected_Count' not in st.session_state:
     st.session_state['Selected_Count']=df['N_Cand'].max()
-    
 if 'Selected_Genre' not in st.session_state:
     st.session_state['Selected_Genre']="Lesser"
-    
 if 'Selected_Query' not in st.session_state:
     st.session_state['Selected_Query']='(Year==2020) | (Year==2021)'
 
@@ -170,49 +155,56 @@ if 'Selected_Query' not in st.session_state:
 #Sidebar Year filter
 filtered_year_list = st.sidebar.multiselect('Year', df['Year'].astype(int).unique())
 
-if st.session_state['Selected_Year']!=filtered_year_list:
-    st.session_state['Selected_Year']=filtered_year_list
-    
 #Sidebar Poll Filter
 filtered_poll_list = st.sidebar.multiselect('Poll', df['Poll'].unique())
 st.sidebar.markdown('Poll = 0 : General Election', unsafe_allow_html=True)
 st.sidebar.markdown('Poll > 0 : Bye Election', unsafe_allow_html=True)
 
-if st.session_state['Selected_Poll']!=filtered_poll_list:
-    st.session_state['Selected_Poll']=filtered_poll_list
-    
 #Sidebar District filter
 filtered_district_list = st.sidebar.multiselect('District', df['District'].unique())
 
-if st.session_state['Selected_District']!=filtered_district_list:
-    st.session_state['Selected_District']=filtered_district_list
-    
-#Sidebar LB Name filter
-filtered_LB_Name= st.sidebar.multiselect('Local Body Name', df['LB_Name'].unique())
+#Sidebar LB Name Filter, allows to filter Local Body based on selected District, as the number of LB_Name are huge, providing all the LB_Name all the time
+#may lead unecessary clicks and no data rendered
 
-if st.session_state['Selected_LB_Name']!=filtered_LB_Name:
-    st.session_state['Selected_LB_Name']=filtered_LB_Name
-    
+filtered_LB_Name= st.sidebar.multiselect('Local Body Name', df[df['District'].isin(filtered_district_list)]['LB_Name'].unique())
+
 #Sidebar Number of Candidate filter
 Candidate_count = st.sidebar.slider('Number of candidate', value=float(df['N_Cand'].max()), min_value=float(df['N_Cand'].min()), max_value=float(df['N_Cand'].max()), step=float(1))
-if st.session_state['Selected_Count']!=Candidate_count:
-    st.session_state['Selected_Count']=Candidate_count
 
 #Additional feature to the Candidate_count slider, to aid the filtering  
 genre = st.sidebar.radio("", ('Greater', 'Lesser', 'Equal'), index=1, help="Select one to filter wards with Number of Candidate greater/lesser/equal to the value")
-if st.session_state['Selected_Genre']!=genre:
-    st.session_state['Selected_Genre']=genre
 
 #All the filters need to be converted into one query statement to filter the dataframe
 
 #Creating query for the Candidate_Count, this query will be merged with all the other filters later 
+
+if st.session_state['Selected_Count']!=Candidate_count:
+    st.session_state['Selected_Count']=Candidate_count
+
+if st.session_state['Selected_Genre']!=genre:
+    st.session_state['Selected_Genre']=genre
+    
 if st.session_state['Selected_Genre'] =="Greater":
     query1="(N_Cand>{})".format(st.session_state['Selected_Count'])
-
 elif st.session_state['Selected_Genre'] =="Lesser":
     query1="(N_Cand<{})".format(st.session_state['Selected_Count'])
 else:
     query1="(N_Cand=={})".format(st.session_state['Selected_Count'])
+    
+    
+if st.session_state['Selected_Year']!=filtered_year_list:
+    st.session_state['Selected_Year']=filtered_year_list
+    
+if st.session_state['Selected_Poll']!=filtered_poll_list:
+    st.session_state['Selected_Poll']=filtered_poll_list
+
+if st.session_state['Selected_District']!=filtered_district_list:
+    st.session_state['Selected_District']=filtered_district_list
+    
+if st.session_state['Selected_LB_Name']!=filtered_LB_Name:
+    st.session_state['Selected_LB_Name']=filtered_LB_Name
+    
+
 
 
 #Taking all the values from the selected filters and making dict to iterate and form a query statement 
@@ -231,8 +223,6 @@ for i,j in enumerate(filters):
 query= query1 if len(query)<1 else query+' & '+query1
 
 
-    
-#st.text(query)
 
 #Session state for query
 if st.session_state['Selected_Query']!=query:
@@ -244,12 +234,36 @@ if st.session_state['Selected_Query']!=query:
 
 dx=df.loc[:,df.columns.isin(["Year","Poll","District","LB_Type","LB_Name","Ward_No","Ward_Reservation","Candidate_Name","Position","Status","N_Cand"])]
 
-try:
-    st.write(dx.query(st.session_state['Selected_Query']).style.format(precision=0))
+head=st.button("Top 10 rows")
+full=st.button('Display full filtered data')
 
-except:
-    st.write(dx.style.format(precision=0))
- 
+
+head_placeholder = st.empty()
+full_placeholder = st.empty()
+
+head=True
+
+
+if head:
+    full_placeholder.empty()
+    try:
+        head_placeholder.dataframe(dx.query(st.session_state['Selected_Query']).head(10).style.format(precision=0))
+    except:
+        head_placeholder.dataframe(dx.head(10).style.format(precision=0))
+else:
+    pass
+    
+if full:
+    head_placeholder.empty()
+    try:
+        full_placeholder.dataframe(dx.query(st.session_state['Selected_Query']).style.format(precision=0))
+    except:
+        full_placeholder.dataframe(dx.style.format(precision=0))
+else:
+    pass
+    
+    
+    
 st.markdown("""<hr/>""", unsafe_allow_html=True)
 
 #Filtered dataframe
@@ -279,3 +293,6 @@ col5,col6,col7 = plot_turnout.columns([1,8,1])
 df_lb=voter_turnout(filtered_df.copy())
 col6.plotly_chart(bar_chart(df_lb,df_lb.LB_Name,"Voter_Turnout_Percentage","Voter Turnout Percentage in the Selected Local Bodies",
 "Local Bodies Name","Voter Turnout Percentage"), use_container_width=True)
+
+
+
