@@ -9,6 +9,12 @@ This repo builds a basic data visualisation dashboard for Telangana Municipal El
 
 Streamlit Visualisation is available at : https://share.streamlit.io/srishti-gupta-me/code_sample/main/viz.py
 
-The visualisation aims to study representation of a party across the election data and various filters can be placed on the dataset. The filters are available on the Side-bar. 
+Functions:
+The visualisation aims to study representation of a party across the election data and various filters can be placed on the dataset. 
+
+1. The filters are available on the Side-bar, year, poll, District, Urban Local Body in the District, and number of candidates in a ward can be select. 
+2. Top 10 rows are rendered for the filtered section. To view the complete filtered dataset, click on the button "Display full filtered data" available above the table. 
+3. As Streamlit takes some time in rendering complete table, please wait. The dataset has rows in the order of 10K. 
+4. A chart to study the voter turnout percentage is also added in the last. To study in depth the Party and Voter stats. 
 
 
