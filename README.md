@@ -1,5 +1,5 @@
 # code_sample
-This repo builds a basic data visualisation dashboard for Telangana Municipal Election Data scraped from https://tsec.gov.in/home.do;jsessionid=A0929A7322CB7B00C1F39D16A41304B8 for year 2020 and 2021 across multiple wards and urban local bodies. 
+This repo builds a basic data visualisation dashboard for Telangana Municipal Election Data scraped from [Telangana Sec Website]( https://tsec.gov.in/home.do;jsessionid=A0929A7322CB7B00C1F39D16A41304B8) for year 2020 and 2021 across multiple wards and urban local bodies. 
 
 1. telangana_scraped_data.csv --> This file contains the raw data scraped from the above website 
 2. data_structure.py --> This script is used to structure the raw scraped data in telangana_scraped_data.csv
